@@ -13,6 +13,7 @@ import os
 
 # Resolve the /data directory relative to this file's location so the app
 # works regardless of the current working directory.
+# Python doit savoir où se trouve le dossier Peu importe où le programme est lancé. :
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(_BASE_DIR, "data")
 
@@ -25,7 +26,7 @@ DESTINATIONS_FILE = os.path.join(DATA_DIR, "destinations.json")
 # Generic file I/O helpers
 # ---------------------------------------------------------------------------
 
-def _read_json(filepath: str) -> list:
+def _read_json(filepath: str) -> list: 
     """Read a JSON file and return its contents as a Python list.
 
     Returns an empty list if the file does not exist or is empty.

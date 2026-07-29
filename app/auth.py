@@ -8,31 +8,38 @@ Routes
 POST /register  – create a new user account
 POST /login     – authenticate and return a JWT token
 """
+
+# ---------------------------------------------------------------------------
+# 2 — Les dépendances
+# ---------------------------------------------------------------------------
 import uuid
 import datetime
 
-import jwt
+import jwt #Sert à créer les tokens d'authentification.
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash #Sert à sécuriser les mots de passe.
 
-from app.models import get_user_by_username, save_user
+from app.models import get_user_by_username, save_user #Sert à lire et écrire les données.
 
+# ---------------------------------------------------------------------------
+# 1 — Le Blueprint
+# ---------------------------------------------------------------------------
 auth_bp = Blueprint("auth", __name__)
 
 
 # ---------------------------------------------------------------------------
-# Helper – JWT utilities
+# 3. Helper – JWT utilities.  (Les fonctions utilitaires)
 # ---------------------------------------------------------------------------
 
 def create_token(username: str, secret: str) -> str:
     """Return a signed JWT for *username* valid for 24 hours."""
     now = datetime.datetime.now(datetime.timezone.utc)
     payload = {
-        "sub": username,
-        "iat": now,
-        "exp": now + datetime.timedelta(hours=24),
+        "sub": username,  #->utilisateur connecté
+        "iat": now,  #-> date de création
+        "exp": now + datetime.timedelta(hours=24), #->expiration
     }
-    return jwt.encode(payload, secret, algorithm="HS256")
+    return jwt.encode(payload, secret, algorithm="HS256") #crée une chaîne signée.
 
 
 def decode_token(token: str, secret: str) -> dict:
@@ -61,7 +68,7 @@ def get_current_user(request_obj) -> str | None:
 # Routes
 # ---------------------------------------------------------------------------
 
-@auth_bp.route("/register", methods=["POST"])
+@auth_bp.route("/register", methods=["POST"]) #Si une requête POST /register arrive, appelle la fonction register().
 def register():
     """Register a new user.
 
@@ -71,17 +78,18 @@ def register():
     Returns 201 on success, 400 on validation errors, 409 if the username is
     already taken.
     """
-    data = request.get_json(silent=True) or {}
-    username = data.get("username", "").strip()
-    password = data.get("password", "")
+    data = request.get_json(silent=True) or {} #i)-> lire le json 
+    username = data.get("username", "").strip() #ii)-> verifier les champs obligatoires 
+    password = data.get("password", "") #ii)-> verifier les champs obligatoires
     preferences = data.get("preferences", [])  # optional list of interest tags
 
     if not username or not password:
         return jsonify({"error": "username and password are required"}), 400
 
-    if get_user_by_username(username):
+    if get_user_by_username(username): #iii)-> Vérifier que le nom d'utilisateur n'existe pas déjà :
         return jsonify({"error": "username already exists"}), 409
 
+    #iv)-> Construire l'utilisateur :
     user = {
         "id": str(uuid.uuid4()),
         "username": username,
@@ -89,6 +97,8 @@ def register():
         "password_hash": generate_password_hash(password),
         "preferences": preferences,
     }
+
+    #v)-> Sava 
     save_user(user)
     return jsonify({"message": "user registered successfully", "username": username}), 201
 

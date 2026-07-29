@@ -36,7 +36,12 @@ def get_recommendations():
     if not user:
         return jsonify({"error": "user not found"}), 404
 
-    preferences = [p.lower() for p in user.get("preferences", [])]
+    preferences = []
+
+    for p in user["preferences"]:
+       preferences.append(p.lower())
+
+    ###preferences = [p.lower()for p in user.get("preferences", [])]
 
     # Parse optional limit parameter
     try:
