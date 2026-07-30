@@ -11,7 +11,7 @@ GET /recommendations
 """
 from flask import Blueprint, request, jsonify
 
-from app.auth import get_current_user
+from app.utils.jwt import get_current_user
 from app.models import get_all_destinations, get_user_by_username
 
 recommendations_bp = Blueprint("recommendations", __name__)

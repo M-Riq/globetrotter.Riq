@@ -15,7 +15,7 @@ import datetime
 
 from flask import Blueprint, request, jsonify
 
-from app.auth import get_current_user
+from app.utils.jwt import get_current_user
 from app.models import get_itineraries_for_user, save_itinerary
 
 itineraries_bp = Blueprint("itineraries", __name__)

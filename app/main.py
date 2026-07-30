@@ -12,7 +12,9 @@ import os
 
 #Va chercher la fonction create_app() dans le package app
 from app import create_app
+from dotenv import load_dotenv
 
+load_dotenv()
 app = create_app()
 
 #"Exécute ce bloc uniquement si ce fichier est lancé directement."

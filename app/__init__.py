@@ -5,6 +5,8 @@ Flask application factory.
 """
 import os
 from flask import Flask
+from app.exceptions.validation_exception import ValidationException
+from app.utils.responses import error
 
 
 def create_app():
@@ -24,7 +26,7 @@ def create_app():
 
     """3 import les blueprints existant"""
     # Register all route blueprints
-    from app.auth import auth_bp
+    from app.routes.auth_routes import auth_bp
     from app.destinations import destinations_bp
     from app.recommendations import recommendations_bp
     from app.itineraries import itineraries_bp
@@ -37,6 +39,15 @@ def create_app():
 
     #Note:  Sans ces appels à register_blueprint, tes tests avec curl auraient tous renvoyé 404.
     
+    @app.errorhandler(ValidationException)
+    def handle_validation_error(exception):
+        """
+        Handle validation errors globally.
+        """
+        return error(
+            exception.message,
+            400
+        )
     return app
 
     
