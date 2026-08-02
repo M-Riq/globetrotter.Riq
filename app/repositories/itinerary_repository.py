@@ -1,33 +1,19 @@
-import os
+"""
+Itinerary Repository
+"""
 
-from app.data.json_storage import (
-    read_json,
-    write_json,
-)
 from app.config import ITINERARIES_FILE
-
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-# ITINERARIES_FILE = os.path.join(
-#     BASE_DIR,
-#     "data",
-#     "itineraries.json",
-# )
+from app.repositories.base_repository import BaseRepository
 
 
-class ItineraryRepository:
+class ItineraryRepository(BaseRepository):
 
-    @staticmethod
-    def get_all():
+    def __init__(self):
+        super().__init__(ITINERARIES_FILE)
 
-        return read_json(
-            ITINERARIES_FILE
-        )
+    def get_by_username(self, username):
 
-    @staticmethod
-    def get_by_user(username):
-
-        itineraries = ItineraryRepository.get_all()
+        itineraries = self.get_all()
 
         return [
             itinerary
@@ -35,14 +21,6 @@ class ItineraryRepository:
             if itinerary["username"] == username
         ]
 
-    @staticmethod
-    def save(itinerary):
+    def save(self, itinerary):
 
-        itineraries = ItineraryRepository.get_all()
-
-        itineraries.append(itinerary)
-
-        write_json(
-            ITINERARIES_FILE,
-            itineraries,
-        )
+        self.append(itinerary)

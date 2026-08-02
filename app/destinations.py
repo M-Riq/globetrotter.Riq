@@ -12,6 +12,7 @@ GET /destinations?q=paris&tag=food&continent=Europe
 from flask import Blueprint, request, jsonify
 
 from app.models import get_all_destinations
+from app.repositories.destination_repository import DestinationRepository
 
 # ---------------------------------------------------------------------------
 # 1 — Le Blueprint
@@ -59,7 +60,8 @@ def search_destinations():
 # ---------------------------------------------------------------------------------------
 # 5 — Lecture des données
 # ---------------------------------------------------------------------------------------
-    destinations = get_all_destinations()
+    repository = DestinationRepository()
+    destinations = repository.get_all()
     results = []
 # ---------------------------------------------------------------------------------------
 

@@ -16,10 +16,10 @@ import datetime
 from flask import Blueprint, request, jsonify
 
 from app.utils.jwt import get_current_user
-from app.models import get_itineraries_for_user, save_itinerary
+from app.repositories.itinerary_repository import ItineraryRepository
 
 itineraries_bp = Blueprint("itineraries", __name__)
-
+repository = ItineraryRepository()
 
 @itineraries_bp.route("/itineraries", methods=["POST"])
 def create_itinerary():
@@ -61,7 +61,7 @@ def create_itinerary():
         "notes": data.get("notes", ""),
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
-    save_itinerary(itinerary)
+    repository.save(itinerary)
     return jsonify(itinerary), 201
 
 
@@ -76,5 +76,5 @@ def list_itineraries():
     if not username:
         return jsonify({"error": "authentication required"}), 401
 
-    itineraries = get_itineraries_for_user(username)
+    itineraries = repository.get_by_username(username)
     return jsonify(itineraries), 200
