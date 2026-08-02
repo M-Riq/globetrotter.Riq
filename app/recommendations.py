@@ -11,7 +11,7 @@ GET /recommendations
 """
 from flask import Blueprint, request, jsonify
 
-from app.auth import get_current_user
+from app.utils.jwt import get_current_user
 from app.models import get_all_destinations, get_user_by_username
 
 recommendations_bp = Blueprint("recommendations", __name__)
@@ -36,7 +36,12 @@ def get_recommendations():
     if not user:
         return jsonify({"error": "user not found"}), 404
 
-    preferences = [p.lower() for p in user.get("preferences", [])]
+    preferences = []
+
+    for p in user["preferences"]:
+       preferences.append(p.lower())
+
+    ###preferences = [p.lower()for p in user.get("preferences", [])]
 
     # Parse optional limit parameter
     try:

@@ -9,11 +9,18 @@ Run locally:
 Or via Docker / docker-compose (see project root).
 """
 import os
-from app import create_app
 
+#Va chercher la fonction create_app() dans le package app
+from app import create_app
+from dotenv import load_dotenv
+
+load_dotenv()
 app = create_app()
 
+#"Exécute ce bloc uniquement si ce fichier est lancé directement."
 if __name__ == "__main__":
+    
+    #"Cherche la variable d'environnement PORT. Si elle n'existe pas, utilise 5000."
     port = int(os.environ.get("PORT", 5000))
     # Enable debug mode only when explicitly requested (e.g. FLASK_DEBUG=1).
     # Never enable debug in production – it exposes an interactive debugger.

@@ -13,10 +13,18 @@ from flask import Blueprint, request, jsonify
 
 from app.models import get_all_destinations
 
+# ---------------------------------------------------------------------------
+# 1 — Le Blueprint
+# ---------------------------------------------------------------------------
 destinations_bp = Blueprint("destinations", __name__)
+# ---------------------------------------------------------------------------
 
-
+# ---------------------------------------------------------------------------
+# 2 — La route
+# ---------------------------------------------------------------------------
 @destinations_bp.route("/destinations", methods=["GET"])
+# ---------------------------------------------------------------------------
+
 def search_destinations():
     """Search destinations by name keyword, tag, and/or continent.
 
@@ -28,21 +36,37 @@ def search_destinations():
 
     Returns a JSON list of matching destination objects.
     """
+# ---------------------------------------------------------------------------------------
+# 3 — prends en coompte Les paramètres de recherche presents dans l'url
+# ---------------------------------------------------------------------------------------
     q = request.args.get("q", "").strip().lower()
     tag = request.args.get("tag", "").strip().lower()
     continent = request.args.get("continent", "").strip().lower()
     max_cost_str = request.args.get("max_cost", "").strip()
+# ---------------------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------------------
+# 4 — Validation
+# ---------------------------------------------------------------------------------------
     max_cost = None
     if max_cost_str:
         try:
             max_cost = int(max_cost_str)
         except ValueError:
             return jsonify({"error": "max_cost must be an integer"}), 400
+# ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------------------
+# 5 — Lecture des données
+# ---------------------------------------------------------------------------------------
     destinations = get_all_destinations()
     results = []
+# ---------------------------------------------------------------------------------------
 
+
+# ---------------------------------------------------------------------------------------
+# 6 — Le filtrage
+# ---------------------------------------------------------------------------------------
     for dest in destinations:
         # Free-text filter
         if q:
@@ -71,3 +95,4 @@ def search_destinations():
         results.append(dest)
 
     return jsonify(results), 200
+# ---------------------------------------------------------------------------------------
