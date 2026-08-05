@@ -24,6 +24,7 @@ class AuthService:
     @staticmethod
     def register(data: dict):
         validate_register_data(data)
+        repository = UserRepository()
 
         username = data.get("username").strip()
         password = data.get("password")
@@ -54,6 +55,7 @@ class AuthService:
     def login(data: dict):
         validate_login_data(data)
         repository = UserRepository()
+
         username = data.get("username").strip()
         password = data.get("password")
 
