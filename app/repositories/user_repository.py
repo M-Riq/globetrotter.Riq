@@ -2,34 +2,18 @@
 User Repository
 """
 
-import os
-
-from app.data.json_storage import (
-    read_json,
-    write_json,
-)
 from app.config import USERS_FILE
-
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-# USERS_FILE = os.path.join(
-#     BASE_DIR,
-#     "data",
-#     "users.json",
-# )
+from app.repositories.base_repository import BaseRepository
 
 
-class UserRepository:
+class UserRepository(BaseRepository):
 
-    @staticmethod
-    def get_all():
+    def __init__(self):
+        super().__init__(USERS_FILE)
 
-        return read_json(USERS_FILE)
+    def get_by_username(self, username):
 
-    @staticmethod
-    def get_by_username(username):
-
-        users = UserRepository.get_all()
+        users = self.get_all()
 
         for user in users:
 
@@ -38,14 +22,6 @@ class UserRepository:
 
         return None
 
-    @staticmethod
-    def save(user):
+    def save(self, user):
 
-        users = UserRepository.get_all()
-
-        users.append(user)
-
-        write_json(
-            USERS_FILE,
-            users,
-        )
+        self.append(user)

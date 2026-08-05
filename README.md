@@ -133,3 +133,19 @@ All data is persisted in plain JSON files inside the `data/` directory:
 | `PORT`               | `5000`                               | Port the app listens on |
 
 > **Important:** Always set `SECRET_KEY` to a long, random value in production (e.g. `python -c "import secrets; print(secrets.token_hex(32))"`).
+
+
+------------------------------------------
+
+# 📚 Additional Documentation
+
+The backend has been progressively refactored from the original monolithic architecture into a layered architecture.
+
+The project documentation is available in the **docs** directory.
+
+| Document | Description |
+|-----------|-------------|
+| [Project Overview](docs/PROJECT_OVERVIEW.md) | Vision, objectives and roadmap |
+| [Architecture](docs/ARCHITECTURE.md) | Layered backend architecture |
+| [Refactoring History](docs/REFACTORING_HISTORY.md) | Evolution from monolith to layered architecture |
+| [API Documentation](docs/API.md) | REST API reference |

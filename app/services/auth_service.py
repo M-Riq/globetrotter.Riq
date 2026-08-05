@@ -24,12 +24,13 @@ class AuthService:
     @staticmethod
     def register(data: dict):
         validate_register_data(data)
+        repository = UserRepository()
 
         username = data.get("username").strip()
         password = data.get("password")
         preferences = data.get("preferences", [])
 
-        if UserRepository.get_by_username(username):
+        if repository.get_by_username(username):
             return error("username already exists",409)
 
         user = {
@@ -52,11 +53,12 @@ class AuthService:
     @staticmethod
     def login(data: dict):
         validate_login_data(data)
+        repository = UserRepository()
 
         username = data.get("username").strip()
         password = data.get("password")
 
-        user = UserRepository.get_by_username(username)
+        user = repository.get_by_username(username)
 
         if not user:
             return error("invalid credentials", 401)
