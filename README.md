@@ -145,7 +145,7 @@ The project documentation is available in the **docs** directory.
 
 | Document | Description |
 |-----------|-------------|
-| [Project Overview](docs/PROJECT_OVERVIEW.md) | Vision, objectives and roadmap |
-| [Architecture](docs/ARCHITECTURE.md) | Layered backend architecture |
-| [Refactoring History](docs/REFACTORING_HISTORY.md) | Evolution from monolith to layered architecture |
+| [Project Overview](docs/proj_overview.md) | Vision, objectives and roadmap |
+| [Architecture](docs/architecture.md) | Layered backend architecture |
+| [Refactoring History](docs/refactoringHistory.md) | Evolution from monolith to layered architecture |
 | [API Documentation](docs/API.md) | REST API reference |
