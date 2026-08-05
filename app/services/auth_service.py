@@ -29,6 +29,7 @@ class AuthService:
         username = data.get("username").strip()
         password = data.get("password")
         preferences = data.get("preferences", [])
+        repository = UserRepository()
 
         if repository.get_by_username(username):
             return error("username already exists",409)
@@ -40,7 +41,7 @@ class AuthService:
             "preferences": preferences,
         }
 
-        UserRepository.save(user)
+        repository.save(user)
 
         return success(
         data={

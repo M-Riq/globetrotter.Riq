@@ -8,6 +8,7 @@ from app.utils.jwt import get_current_user
 from app.utils.responses import error
 from app.services.itinerary_service import ItineraryService
 
+
 itineraries_bp = Blueprint(
     "itineraries",
     __name__,
