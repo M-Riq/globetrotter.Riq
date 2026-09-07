@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itinerary-service
+  namespace: globetrotter
+  labels:
+    app: itinerary-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: itinerary-service
+  template:
+    metadata:
+      labels:
+        app: itinerary-service
+    spec:
+      containers:
+        - name: itinerary-service
+          image: globetrotter/itinerary-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5005
+          env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef: {name: globetrotter-secrets, key: JWT_SECRET_KEY}
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: CORS_ORIGINS}
+        - name: FLASK_DEBUG
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: FLASK_DEBUG}
+        - name: DATA_DIR
+          value: "/app/data"
+        - name: DESTINATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: DESTINATION_SERVICE_URL}
+        - name: GOOGLE_MAPS_API_KEY
+          valueFrom:
+            secretKeyRef: {name: globetrotter-secrets, key: GOOGLE_MAPS_API_KEY}
+          readinessProbe:
+            httpGet: {path: /health, port: 5005}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 5005}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: "100m", memory: "128Mi"}
+            limits: {cpu: "500m", memory: "256Mi"}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: itinerary-service-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itinerary-service
+  namespace: globetrotter
+spec:
+  selector:
+    app: itinerary-service
+  ports:
+    - port: 5005
+      targetPort: 5005
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: itinerary-service-data
+  namespace: globetrotter
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

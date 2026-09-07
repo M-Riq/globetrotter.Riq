@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: globetrotter
+  labels:
+    app: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: globetrotter/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef: {name: globetrotter-secrets, key: JWT_SECRET_KEY}
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: CORS_ORIGINS}
+        - name: FLASK_DEBUG
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: FLASK_DEBUG}
+        - name: AUTH_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: AUTH_SERVICE_URL}
+        - name: USER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: USER_SERVICE_URL}
+        - name: DESTINATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: DESTINATION_SERVICE_URL}
+        - name: RECOMMENDATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: RECOMMENDATION_SERVICE_URL}
+        - name: ITINERARY_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: ITINERARY_SERVICE_URL}
+        - name: ADMIN_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: ADMIN_SERVICE_URL}
+          readinessProbe:
+            httpGet: {path: /health, port: 5000}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 5000}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: "100m", memory: "128Mi"}
+            limits: {cpu: "500m", memory: "256Mi"}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: globetrotter
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: LoadBalancer

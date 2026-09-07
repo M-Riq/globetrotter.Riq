@@ -1,0 +1,1820 @@
+{
+  "info": {
+    "_postman_id": "951748c2-057c-4cd3-abcc-99f70d1d3a98",
+    "name": "GlobeTrotter Backend",
+    "description": "Validates every GlobeTrotter microservice individually (direct ports, requires docker-compose.override.yml), then the full workflow through the API Gateway only -- exactly what the Next.js frontend will call. See POSTMAN_CHECKLIST.md at the repo root for the step-by-step guide.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Health Checks",
+      "item": [
+        {
+          "name": "Gateway - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Auth Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "User Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Destination Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{destination_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recommendation Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{recommendation_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Itinerary Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Service - Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin_direct_url}}/health"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service reports ok/degraded status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(['ok', 'degraded']).to.include(body.status || 'ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Run this first. Every service (and the gateway's own aggregate check) should respond 200. If any is down, fix that before moving on -- everything downstream depends on it."
+    },
+    {
+      "name": "01 - Auth Service (direct :5001)",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/register"
+            },
+            "description": "Registers a fresh visitor account (username is timestamped so this is safe to re-run).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{generated_username}}\",\n  \"password\": \"{{test_password}}\",\n  \"preferences\": [\n    \"culture\",\n    \"shopping\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('generated_username', 'kevin_' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns the username', () => pm.expect(body.data.username).to.eql(pm.environment.get('generated_username')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - duplicate username is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/register"
+            },
+            "description": "Same username as the previous request -- must fail with 409.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{generated_username}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{generated_username}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns access + refresh tokens', () => {",
+                  "  pm.expect(body.data.token).to.be.a('string');",
+                  "  pm.expect(body.data.refresh_token).to.be.a('string');",
+                  "});",
+                  "pm.environment.set('access_token', body.data.token);",
+                  "pm.environment.set('refresh_token', body.data.refresh_token);",
+                  "pm.environment.set('user_id', body.data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - wrong password is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{generated_username}}\",\n  \"password\": \"definitely-wrong\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/admin/login"
+            },
+            "description": "Uses the constant admin credentials from .env (ADMIN_EMAIL / ADMIN_PASSWORD).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('admin_token', body.data.token);",
+                  "pm.test('Role is admin', () => pm.expect(body.data.user.role).to.eql('admin'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/verify"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Payload sub matches user_id', () => pm.expect(body.data.sub).to.eql(pm.environment.get('user_id')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_direct_url}}/api/auth/refresh"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('access_token', body.data.token);"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Run in order. Populates access_token, refresh_token, user_id and admin_token used by every folder below."
+    },
+    {
+      "name": "02 - User Service (direct :5002)",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/users/me"
+            },
+            "description": "The profile should already exist -- Auth Service creates it via an internal call on registration."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Preferences carried over from registration', () => pm.expect(body.data.preferences).to.include('culture'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update My Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/users/me"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": [\n    \"culture\",\n    \"shopping\",\n    \"tourisme\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/users/me/favorites"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination_id\": \"{{destination_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Favorite is in the list', () => pm.expect(body.data).to.include(pm.environment.get('destination_id')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Favorites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/users/me/favorites"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Favorite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/users/me/favorites/{{destination_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[RBAC] Non-admin cannot list all users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/admin/users"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/admin/users"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('At least one profile exists', () => pm.expect(body.data.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - Get One User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/admin/users/{{user_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Destination Service (direct :5003)",
+      "item": [
+        {
+          "name": "Search Destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/destinations?category=culture"
+            },
+            "description": "No auth required -- public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns an array', () => pm.expect(body.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Near a Point (distance sort)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/destinations?lat=3.8667&lng=11.5167"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Results carry distance_km and are sorted ascending', () => {",
+                  "  const distances = body.data.map(d => d.distance_km);",
+                  "  const sorted = [...distances].sort((a,b) => a-b);",
+                  "  pm.expect(distances).to.eql(sorted);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get One Destination (seed data)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/destinations/{{destination_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[RBAC] Non-admin cannot create a destination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/admin/destinations"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should Fail\",\n  \"description\": \"x\",\n  \"category\": \"culture\",\n  \"latitude\": 3.86,\n  \"longitude\": 11.52\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - Create Destination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/admin/destinations"
+            },
+            "description": "Overwrites the destination_id environment variable with the newly created id for the rest of this run.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Cafe\",\n  \"description\": \"Created by the Postman checklist -- safe to delete.\",\n  \"category\": \"restaurants\",\n  \"latitude\": 3.869,\n  \"longitude\": 11.521,\n  \"budget_estimate\": 3000,\n  \"tags\": [\n    \"restaurants\",\n    \"test\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('destination_id', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - Update Destination",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/admin/destinations/{{destination_id}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4.7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Rating updated', () => pm.expect(body.data.rating).to.eql(4.7));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - List All Destinations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/admin/destinations"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Creates a real destination and points destination_id at it, so Recommendation/Itinerary requests below exercise a destination you own end-to-end (use the Cleanup folder to delete it after)."
+    },
+    {
+      "name": "04 - Recommendation Service (direct :5004)",
+      "item": [
+        {
+          "name": "Get Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{recommendation_direct_url}}/api/recommendations?limit=5"
+            },
+            "description": "Requires User Service and Destination Service to also be reachable -- if this fails but both of those pass their own health checks, check RECOMMENDATION_SERVICE's env vars (USER_SERVICE_URL / DESTINATION_SERVICE_URL) point at the Docker network names, not localhost."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Each result has a match_score', () => {",
+                  "  body.data.forEach(d => pm.expect(d).to.have.property('match_score'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Recommendations Near a Point",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{recommendation_direct_url}}/api/recommendations?limit=3&lat=3.8667&lng=11.5167"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Itinerary Service (direct :5005)",
+      "item": [
+        {
+          "name": "Generate Route Preview (not saved)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries/generate"
+            },
+            "description": "With no GOOGLE_MAPS_API_KEY set, route.source should read 'fallback_textual'. With a real key configured, expect 'google_maps' instead.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin_lat\": 3.8667,\n  \"origin_lng\": 11.5167,\n  \"destination_id\": \"{{destination_id}}\",\n  \"mode\": \"walking\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Route has a distance and a source', () => {",
+                  "  pm.expect(body.data.route.distance_km).to.be.a('number');",
+                  "  pm.expect(body.data.route.source).to.be.a('string');",
+                  "});",
+                  "pm.test('Transport comparison covers walking/moto/taxi', () => {",
+                  "  const modes = body.data.transport_comparison.map(t => t.mode);",
+                  "  pm.expect(modes).to.include.members(['walking', 'moto', 'taxi']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate - unknown destination is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries/generate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin_lat\": 3.8667,\n  \"origin_lng\": 11.5167,\n  \"destination_id\": \"does-not-exist\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Itinerary (mark destination reached)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination_id\": \"{{destination_id}}\",\n  \"origin_lat\": 3.8667,\n  \"origin_lng\": 11.5167,\n  \"mode\": \"walking\",\n  \"status\": \"reached\",\n  \"impression\": \"Superbe endroit, je recommande !\",\n  \"rating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('itinerary_id', body.data.id);",
+                  "pm.test('Status is reached with a reached_at date', () => {",
+                  "  pm.expect(body.data.status).to.eql('reached');",
+                  "  pm.expect(body.data.reached_at).to.not.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Itineraries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('count_reached is at least 1', () => pm.expect(body.data.count_reached).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get One Itinerary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries/{{itinerary_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Ownership] Other user cannot read this itinerary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries/{{itinerary_id}}"
+            },
+            "description": "The admin JWT has a different 'sub' than the itinerary owner, so this must 404 -- itineraries are scoped strictly to their owner."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin token (different sub) gets 404, not the owner\\'s data', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Share via WhatsApp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/itineraries/{{itinerary_id}}/share"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns a wa.me link', () => pm.expect(body.data.whatsapp_url).to.include('https://wa.me/?text='));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - List All Itineraries (read-only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{itinerary_direct_url}}/api/admin/itineraries"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Admin Service (direct :5006)",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{admin_direct_url}}/api/admin/dashboard/stats"
+            },
+            "description": "Aggregates live from User/Destination/Itinerary services -- run their folders first so the numbers are non-zero."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Counts are present', () => {",
+                  "  ['total_users','total_destinations','total_itineraries','total_destinations_reached']",
+                  "    .forEach(k => pm.expect(body.data).to.have.property(k));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - API Gateway - Full E2E Workflow",
+      "item": [
+        {
+          "name": "Register (via Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/register"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{gw_generated_username}}\",\n  \"password\": \"{{test_password}}\",\n  \"preferences\": [\n    \"tourisme\",\n    \"sante\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('gw_generated_username', 'gwuser_' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (via Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{gw_generated_username}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('gw_access_token', body.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Login (via Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/admin/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('gw_admin_token', body.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My Profile (via Gateway -> User Service)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/users/me"
+            },
+            "description": "Proves the gateway correctly routes /api/users/* to the User Service, and that the Auth -> User Service internal registration call worked end-to-end."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Preferences from registration came through', () => pm.expect(body.data.preferences).to.include('tourisme'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin - Create Destination (via Gateway -> Destination Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/admin/destinations"
+            },
+            "description": "Proves /api/admin/destinations is routed to the Destination Service, not swallowed by the more general /api/admin prefix (which goes to the Admin Service) -- this is the longest-prefix-wins routing rule in api-gateway/config.py.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gateway E2E Test Spot\",\n  \"description\": \"Created during the gateway end-to-end check -- safe to delete.\",\n  \"category\": \"tourisme\",\n  \"latitude\": 3.872,\n  \"longitude\": 11.515,\n  \"budget_estimate\": 0,\n  \"tags\": [\n    \"tourisme\",\n    \"test\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('gw_destination_id', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Destinations (via Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/destinations?category=tourisme"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Newly created destination is findable', () => {",
+                  "  const ids = body.data.map(d => d.id);",
+                  "  pm.expect(ids).to.include(pm.environment.get('gw_destination_id'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Recommendations (via Gateway -> Recommendation Service)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/recommendations?limit=5"
+            },
+            "description": "Exercises the gateway plus the Recommendation Service's own calls to User + Destination services -- three services in one request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate Itinerary Preview (via Gateway -> Itinerary Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/itineraries/generate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin_lat\": 3.8667,\n  \"origin_lng\": 11.5167,\n  \"destination_id\": \"{{gw_destination_id}}\",\n  \"mode\": \"walking\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Route generated', () => pm.expect(body.data.route.distance_km).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Itinerary as Reached (via Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/itineraries"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination_id\": \"{{gw_destination_id}}\",\n  \"origin_lat\": 3.8667,\n  \"origin_lng\": 11.5167,\n  \"mode\": \"walking\",\n  \"status\": \"reached\",\n  \"impression\": \"Test\\u00e9 via la Gateway -- tout fonctionne !\",\n  \"rating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('gw_itinerary_id', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Itineraries (via Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/itineraries"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Share Itinerary via WhatsApp (via Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/itineraries/{{gw_itinerary_id}}/share"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('wa.me link returned', () => pm.expect(body.data.whatsapp_url).to.include('wa.me'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Dashboard Stats (via Gateway -> Admin Service)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/admin/dashboard/stats"
+            },
+            "description": "If this passes with a realistic non-zero count, the Admin Service is correctly aggregating live from the other three services through their own admin endpoints."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('total_destinations_reached is at least 1', () => pm.expect(body.data.total_destinations_reached).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gateway - unmapped path returns 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/nonexistent-service/ping"
+            },
+            "description": "Sanity check that the gateway doesn't silently swallow typos in the frontend's API calls."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Run 00-06 at least once first so seed/admin state exists, then run this folder top-to-bottom through the GATEWAY ONLY (port 5000) -- this is exactly the path the Next.js frontend will take once reconnected. If every request here passes, the frontend is safe to point at the gateway."
+    },
+    {
+      "name": "08 - Cleanup (run manually)",
+      "item": [
+        {
+          "name": "Delete Test Destination (direct)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{destination_direct_url}}/api/admin/destinations/{{destination_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Gateway Test Destination",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gw_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/admin/destinations/{{gw_destination_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Test User Profile (direct)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_direct_url}}/api/admin/users/{{user_id}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Destructive -- not part of the automated run. Removes the test destinations and profile created above. Note: this only deletes the User Service profile, not the Auth Service credential record (Auth Service has no delete-user endpoint yet -- see the root README's 'out of scope' section)."
+    }
+  ]
+}

@@ -1,13 +1,155 @@
 version: "3.9"
 
+# services:
+#   globetrotter:
+#     build: .
+#     container_name: globetrotter_app
+#     ports:
+#       - "5000:5000"
+    # Mount local code so changes are reflected without rebuilding the image
+    # volumes:
+    #   - .:/globetrotter
+    # environment:
+    #   - PORT=5000
+
+
+
+
+# GlobeTrotter -- Docker Compose for local / single-host deployment.
+#
+# All services share one Docker network (globetrotter-net) and talk
+# to each other by service name. Only the API Gateway is exposed to
+# the host; every other service is reachable only inside the network
+# (the front will go through the gateway).
+#
+# Usage:
+#   cp .env.example .env   # then edit .env
+#   docker compose up --build
+
+x-common-env: &common-env
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me}
+  INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-dev-internal-key-change-me}
+  CORS_ORIGINS: ${CORS_ORIGINS:-*}
+  FLASK_DEBUG: "false"
+
 services:
-  globetrotter:
-    build: .
-    container_name: globetrotter_app
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: globetrotter/api-gateway
     ports:
       - "5000:5000"
-    # Mount local code so changes are reflected without rebuilding the image
-    volumes:
-      - .:/globetrotter
     environment:
-      - PORT=5000
+      <<: *common-env
+      AUTH_SERVICE_URL: http://auth-service:5001
+      USER_SERVICE_URL: http://user-service:5002
+      DESTINATION_SERVICE_URL: http://destination-service:5003
+      RECOMMENDATION_SERVICE_URL: http://recommendation-service:5004
+      ITINERARY_SERVICE_URL: http://itinerary-service:5005
+      ADMIN_SERVICE_URL: http://admin-service:5006
+    depends_on:
+      - auth-service
+      - user-service
+      - destination-service
+      - recommendation-service
+      - itinerary-service
+      - admin-service
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    image: globetrotter/auth-service
+    environment:
+      <<: *common-env
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@globetrotter.cm}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMe123!}
+      DATA_DIR: /app/data
+      USER_SERVICE_URL: http://user-service:5002
+    volumes:
+      - auth-data:/app/data
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    image: globetrotter/user-service
+    environment:
+      <<: *common-env
+      DATA_DIR: /app/data
+      AUTH_SERVICE_URL: http://auth-service:5001
+    volumes:
+      - user-data:/app/data
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  destination-service:
+    build:
+      context: .
+      dockerfile: destination-service/Dockerfile
+    image: globetrotter/destination-service
+    environment:
+      <<: *common-env
+      DATA_DIR: /app/data
+    volumes:
+      - destination-data:/app/data
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: recommendation-service/Dockerfile
+    image: globetrotter/recommendation-service
+    environment:
+      <<: *common-env
+      USER_SERVICE_URL: http://user-service:5002
+      DESTINATION_SERVICE_URL: http://destination-service:5003
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  itinerary-service:
+    build:
+      context: .
+      dockerfile: itinerary-service/Dockerfile
+    image: globetrotter/itinerary-service
+    environment:
+      <<: *common-env
+      DATA_DIR: /app/data
+      DESTINATION_SERVICE_URL: http://destination-service:5003
+      # GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
+    volumes:
+      - itinerary-data:/app/data
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: admin-service/Dockerfile
+    image: globetrotter/admin-service
+    environment:
+      <<: *common-env
+      USER_SERVICE_URL: http://user-service:5002
+      DESTINATION_SERVICE_URL: http://destination-service:5003
+      ITINERARY_SERVICE_URL: http://itinerary-service:5005
+    networks: [globetrotter-net]
+    restart: unless-stopped
+
+networks:
+  globetrotter-net:
+    driver: bridge
+
+volumes:
+  auth-data:
+  user-data:
+  destination-data:
+  itinerary-data:
+

@@ -1,0 +1,29 @@
+# Routes external traffic straight to the API Gateway, which then
+# does its own internal routing to each microservice (see
+# api-gateway/config.py). Only the gateway is exposed outside the
+# cluster.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: globetrotter-ingress
+  namespace: globetrotter
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.globetrotter.example.com
+      secretName: globetrotter-tls
+  rules:
+    - host: api.globetrotter.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 5000
