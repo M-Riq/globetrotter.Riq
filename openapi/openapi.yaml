@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: GlobeTrotter API
+  description: >
+    Public API surface exposed by the GlobeTrotter API Gateway.
+    Every path below is served by exactly one microservice behind the
+    gateway (see api-gateway/README.md for the routing table) but the
+    frontend only ever needs to know this single contract.
+  version: "1.0.0"
+  contact:
+    name: GlobeTrotter Backend
+servers:
+  - url: http://localhost:5000
+    description: Local docker-compose
+  - url: https://api.globetrotter.example.com
+    description: Production (via Ingress)
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Destinations
+  - name: Recommendations
+  - name: Itineraries
+  - name: Admin
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data: {}
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+    Destination:
+      type: object
+      properties:
+        id: {type: string}
+        name: {type: string}
+        description: {type: string}
+        category:
+          type: string
+          enum: [restaurants, shopping, vie_nocturne, tourisme, hotels, services_administratifs, sante, culture, loisirs, sports, transport]
+        latitude: {type: number, format: float}
+        longitude: {type: number, format: float}
+        images:
+          type: array
+          items: {type: string}
+        opening_hours: {type: string}
+        budget_estimate: {type: number}
+        contact: {type: string}
+        rating: {type: number}
+        tags:
+          type: array
+          items: {type: string}
+    Itinerary:
+      type: object
+      properties:
+        id: {type: string}
+        user_id: {type: string}
+        destination_id: {type: string}
+        destination_name: {type: string}
+        status: {type: string, enum: [planned, reached]}
+        impression: {type: string}
+        rating: {type: number}
+        reached_at: {type: string, format: date-time, nullable: true}
+        route: {type: object}
+        transport_comparison:
+          type: array
+          items: {type: object}
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new visitor account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: {type: string}
+                password: {type: string}
+                email: {type: string}
+                preferences:
+                  type: array
+                  items: {type: string}
+      responses:
+        "201": {description: Created, content: {application/json: {schema: {$ref: "#/components/schemas/SuccessResponse"}}}}
+        "400": {description: Validation error, content: {application/json: {schema: {$ref: "#/components/schemas/ErrorResponse"}}}}
+        "409": {description: Username already exists}
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in as a visitor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: {type: string}
+                password: {type: string}
+      responses:
+        "200": {description: OK -- returns access + refresh JWT}
+        "401": {description: Invalid credentials}
+
+  /api/auth/admin/login:
+    post:
+      tags: [Auth]
+      summary: Log in as the administrator (constant credentials)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: {type: string, description: "Admin email"}
+                password: {type: string}
+      responses:
+        "200": {description: OK}
+        "401": {description: Invalid credentials}
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Exchange a refresh token for a new access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: {type: string}
+      responses:
+        "200": {description: OK}
+        "401": {description: Invalid or expired refresh token}
+
+  /api/auth/verify:
+    get:
+      tags: [Auth]
+      summary: Validate a token
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: Token is valid}
+        "401": {description: Invalid or missing token}
+
+  /api/users/me:
+    get:
+      tags: [Users]
+      summary: Get my profile
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+    put:
+      tags: [Users]
+      summary: Update my preferences
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferences:
+                  type: array
+                  items: {type: string}
+      responses:
+        "200": {description: OK}
+
+  /api/users/me/favorites:
+    get:
+      tags: [Users]
+      summary: List my favorite destinations
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+    post:
+      tags: [Users]
+      summary: Add a favorite
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_id]
+              properties:
+                destination_id: {type: string}
+      responses:
+        "201": {description: Created}
+
+  /api/users/me/favorites/{destinationId}:
+    delete:
+      tags: [Users]
+      summary: Remove a favorite
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: destinationId
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200": {description: OK}
+
+  /api/destinations:
+    get:
+      tags: [Destinations]
+      summary: Search / filter destinations
+      parameters:
+        - {name: q, in: query, schema: {type: string}}
+        - {name: category, in: query, schema: {type: string}}
+        - {name: tag, in: query, schema: {type: string}}
+        - {name: max_budget, in: query, schema: {type: number}}
+        - {name: min_rating, in: query, schema: {type: number}}
+        - {name: lat, in: query, schema: {type: number}}
+        - {name: lng, in: query, schema: {type: number}}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: {type: string}
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Destination"}
+
+  /api/destinations/{id}:
+    get:
+      tags: [Destinations]
+      summary: Get one destination
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+        "404": {description: Not found}
+
+  /api/recommendations:
+    get:
+      tags: [Recommendations]
+      summary: Get personalised recommendations
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, default: 5}}
+        - {name: lat, in: query, schema: {type: number}}
+        - {name: lng, in: query, schema: {type: number}}
+      responses:
+        "200": {description: OK}
+
+  /api/itineraries/generate:
+    post:
+      tags: [Itineraries]
+      summary: Preview a route (not saved)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin_lat, origin_lng, destination_id]
+              properties:
+                origin_lat: {type: number}
+                origin_lng: {type: number}
+                destination_id: {type: string}
+                mode: {type: string, enum: [walking, moto, taxi], default: walking}
+      responses:
+        "200": {description: OK -- route + transport_comparison}
+        "404": {description: Destination not found}
+
+  /api/itineraries:
+    post:
+      tags: [Itineraries]
+      summary: Save an itinerary (e.g. mark a destination reached)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_id]
+              properties:
+                destination_id: {type: string}
+                origin_lat: {type: number}
+                origin_lng: {type: number}
+                mode: {type: string}
+                status: {type: string, enum: [planned, reached], default: reached}
+                impression: {type: string}
+                rating: {type: number}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: {type: string}
+                  data: {$ref: "#/components/schemas/Itinerary"}
+    get:
+      tags: [Itineraries]
+      summary: List my itineraries
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+
+  /api/itineraries/{id}:
+    get:
+      tags: [Itineraries]
+      summary: Get one of my itineraries
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+        "404": {description: Not found}
+
+  /api/itineraries/{id}/share:
+    post:
+      tags: [Itineraries]
+      summary: Generate a WhatsApp share link for a reached itinerary
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK -- returns whatsapp_url}
+
+  /api/admin/destinations:
+    get:
+      tags: [Admin]
+      summary: List all destinations (admin)
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+    post:
+      tags: [Admin]
+      summary: Create a destination
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/Destination"}
+      responses:
+        "201": {description: Created}
+        "403": {description: Insufficient permissions}
+
+  /api/admin/destinations/{id}:
+    put:
+      tags: [Admin]
+      summary: Update a destination
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+    delete:
+      tags: [Admin]
+      summary: Delete a destination
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List all user profiles
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+
+  /api/admin/users/{userId}:
+    get:
+      tags: [Admin]
+      summary: Get one user profile
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: userId, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+    delete:
+      tags: [Admin]
+      summary: Delete a user profile
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: userId, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: OK}
+
+  /api/admin/itineraries:
+    get:
+      tags: [Admin]
+      summary: List all itineraries (admin, read-only)
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: OK}
+
+  /api/admin/dashboard/stats:
+    get:
+      tags: [Admin]
+      summary: Aggregate dashboard statistics
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: {type: string}
+                  data:
+                    type: object
+                    properties:
+                      total_users: {type: integer}
+                      total_destinations: {type: integer}
+                      destinations_by_category: {type: object}
+                      total_itineraries: {type: integer}
+                      total_destinations_reached: {type: integer}

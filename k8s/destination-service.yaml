@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: destination-service
+  namespace: globetrotter
+  labels:
+    app: destination-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: destination-service
+  template:
+    metadata:
+      labels:
+        app: destination-service
+    spec:
+      containers:
+        - name: destination-service
+          image: globetrotter/destination-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5003
+          env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef: {name: globetrotter-secrets, key: JWT_SECRET_KEY}
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: CORS_ORIGINS}
+        - name: FLASK_DEBUG
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: FLASK_DEBUG}
+        - name: DATA_DIR
+          value: "/app/data"
+          readinessProbe:
+            httpGet: {path: /health, port: 5003}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 5003}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: "100m", memory: "128Mi"}
+            limits: {cpu: "500m", memory: "256Mi"}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: destination-service-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: destination-service
+  namespace: globetrotter
+spec:
+  selector:
+    app: destination-service
+  ports:
+    - port: 5003
+      targetPort: 5003
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: destination-service-data
+  namespace: globetrotter
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

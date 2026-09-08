@@ -1,0 +1,36 @@
+# Local development convenience only.
+#
+# docker-compose.yml deliberately exposes ONLY the API Gateway to the
+# host (every other service is reachable solely inside the Docker
+# network) -- that's the production-like posture. This override adds
+# host port mappings for every other service so each one can be
+# tested directly and individually in Postman before validating the
+# full workflow through the gateway.
+#
+# `docker compose up` picks this file up automatically whenever it
+# sits next to docker-compose.yml. To run WITHOUT it (closer to
+# production, gateway-only exposure), use:
+#   docker compose -f docker-compose.yml up --build
+#
+# Safe to delete this file entirely once you're done validating --
+# nothing else depends on it.
+
+services:
+  auth-service:
+    ports:
+      - "5001:5001"
+  user-service:
+    ports:
+      - "5002:5002"
+  destination-service:
+    ports:
+      - "5003:5003"
+  recommendation-service:
+    ports:
+      - "5004:5004"
+  itinerary-service:
+    ports:
+      - "5005:5005"
+  admin-service:
+    ports:
+      - "5006:5006"

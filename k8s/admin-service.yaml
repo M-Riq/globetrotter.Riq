@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+  namespace: globetrotter
+  labels:
+    app: admin-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      containers:
+        - name: admin-service
+          image: globetrotter/admin-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5006
+          env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef: {name: globetrotter-secrets, key: JWT_SECRET_KEY}
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: CORS_ORIGINS}
+        - name: FLASK_DEBUG
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: FLASK_DEBUG}
+        - name: USER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: USER_SERVICE_URL}
+        - name: DESTINATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: DESTINATION_SERVICE_URL}
+        - name: ITINERARY_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: {name: globetrotter-config, key: ITINERARY_SERVICE_URL}
+          readinessProbe:
+            httpGet: {path: /health, port: 5006}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 5006}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: "100m", memory: "128Mi"}
+            limits: {cpu: "500m", memory: "256Mi"}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: globetrotter
+spec:
+  selector:
+    app: admin-service
+  ports:
+    - port: 5006
+      targetPort: 5006
+  type: ClusterIP

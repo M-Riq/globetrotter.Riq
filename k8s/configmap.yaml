@@ -1,0 +1,15 @@
+# Non-secret configuration shared across services.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: globetrotter-config
+  namespace: globetrotter
+data:
+  CORS_ORIGINS: "https://globetrotter.example.com"
+  FLASK_DEBUG: "false"
+  AUTH_SERVICE_URL: "http://auth-service:5001"
+  USER_SERVICE_URL: "http://user-service:5002"
+  DESTINATION_SERVICE_URL: "http://destination-service:5003"
+  RECOMMENDATION_SERVICE_URL: "http://recommendation-service:5004"
+  ITINERARY_SERVICE_URL: "http://itinerary-service:5005"
+  ADMIN_SERVICE_URL: "http://admin-service:5006"
